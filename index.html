@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리 동네 카페 통합 플랫폼</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        /* CSS 스타일 시작 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        
+        :root {
+            --primary-color: #4CAF50;
+            --text-color: #333;
+            --bg-color: #f0f4f8;
+            --header-bg-color: #fff;
+            --footer-bg-color: #2c3e50;
+            --footer-text-color: #ecf0f1;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background-color: var(--header-bg-color);
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo svg {
+            margin-right: 10px; /* 아이콘과 텍스트 사이 간격 */
+            width: 1.2em; /* 아이콘 크기 조정 */
+            height: 1.2em;
+            fill: currentColor; /* h1의 색상을 따르도록 설정 */
+        }
+
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        nav li {
+            margin-left: 30px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 700;
+            font-size: 1.1em;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--primary-color);
+        }
+
+        /* 햄버거 메뉴 스타일 (모바일용) */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            height: 3px;
+            width: 25px;
+            background-color: var(--text-color);
+            margin: 4px 0;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        /* 메인 콘텐츠 스타일 */
+        main {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .content-section {
+            width: 100%;
+            margin-bottom: 50px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-section h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .map-container {
+            width: 100%;
+            height: 60vh;
+            background-color: #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 50px; /* 카페 목록과의 간격 추가 */
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 카페 목록 섹션 스타일 */
+        .cafe-list-section {
+            width: 100%;
+            padding: 20px;
+        }
+
+        .box {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap; /* 반응형을 위해 추가 */
+        }
+
+        .box1 {
+            width: 300px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            margin: 10px;
+        }
+
+        .box1 > img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .box1 > h2 {
+            font-size: 1.5em;
+            color: #7c5e4a;
+            margin: 0;
+        }
+
+        .box1 > p {
+            font-size: 1.1em;
+            color: #7c5e4a;
+            margin: 5px 0 20px;
+        }
+
+        .box1 > a {
+            text-decoration: none;
+        }
+
+        .box2 {
+            width: 100%;
+            height: 50px;
+            background-color: #7c5e4a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .box2:hover {
+            background-color: #5d4a3e;
+        }
+
+        .box2 > p {
+            font-size: 1.1em;
+            color: white;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        /* 푸터 스타일 */
+        footer {
+            background-color: var(--footer-bg-color);
+            color: var(--footer-text-color);
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9em;
+            margin-top: auto;
+        }
+        
+        footer p {
+            margin: 0;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            nav {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                text-align: center;
+                background-color: var(--header-bg-color);
+                position: absolute;
+                top: 70px;
+                left: 0;
+            }
+
+            nav.active {
+                display: flex;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            nav li {
+                margin: 0;
+                padding: 15px 0;
+                border-bottom: 1px solid #eee;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+            .box {
+                gap: 20px;
+            }
+            .box1 {
+                width: 100%;
+            }
+        }
+        /* CSS 스타일 끝 */
+    </style>
+</head>
+<body>
+
+    <!-- 헤더 영역 -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <!-- 기존 이모티콘을 SVG 아이콘으로 대체 -->
+                <h1>
+                    <img src="로고.png" alt="로고">
+                    <b>우동카</b> (우리동네카페)
+                </h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#about-us">동아리 소개</a></li>
+                    <li><a href="#team">팀원 소개</a></li>
+                    <li><a href="#project">프로젝트 소개</a></li>
+                    <li><a href="#cafe-list">카페 목록</a></li>
+                </ul>
+            </nav>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main>
+        <section id="about-us" class="content-section">
+            <h2>동아리 소개</h2>
+            <p>우리 에잇틴즈는 웹 개발을 통해 지역 사회에 기여하는 것을 목표로 합니다. 학생들의 재능을 활용하여 소상공인들에게 도움이 되는 지역 영세업체 디지털 전환
+            지원을 위한 웹플랫폼 개발 및
+            산학협력 기반 구축 프로젝트로 웹사이트를 제작하고 있습니다.</p>
+        </section>
+
+        <section id="team" class="content-section">
+            <h2>팀원 소개</h2>
+            <p>프로젝트를 위해 모인 열정적인 팀원들입니다. 각자 맡은 역할에 최선을 다하며 협력하고 있습니다.</p>
+            <ul>
+                <li>팀장: 채산 </li>
+                <li>팀원: 서지민 </li>
+                <li>팀원: 변만준 </li>
+                <li>팀원: 문혁준 </li>
+                <li>팀원: 박예찬 </li>
+                <li>팀원: 김세연 </li>
+            </ul>
+        </section>
+
+        <section id="project" class="content-section">
+            <h2>프로젝트 소개</h2>
+            <p>우리 학교 주변의 소규모 카페들을 위한 통합 플랫폼입니다. 각 카페의 개성을 담은 웹페이지를 제작하고, 이 플랫폼을 통해 한눈에 볼 수 있도록 정보를 제공합니다. <br>
+                카페와 협약도 준비중으로 우리 학교 학생증 제시하면 <b>아메리카노 100원 할인</b> 등 행사도 진행할 예정입니다.
+            </p>
+        </section>
+
+        <div class="map-container">
+            <!-- 지도가 렌더링될 곳 -->
+            <div id="map"></div>
+        </div>
+
+        <section id="cafe-list" class="content-section cafe-list-section">
+            <h2>카페 목록</h2>
+            <div class="box">
+                <!-- 카페 1 -->
+                <div class="box1">
+                   <img src="블루밍.jpg" alt="블루밍 카페 이미지">
+                   <h2>블루밍</h2>
+                   <p>햇살과 바람이 스며드는 공간</p>
+                    <a href="https://chaesan477.github.io/BLOOMING-CAFE/">
+                        <div class="box2">
+                            <p>사이트 들어가기</p>
+                       </div>
+                    </a>
+                </div>
+                <!-- 카페 2 -->
+                <div class="box1">
+                    <img src="금향.jpg" alt="금향 카페 이미지">
+                    <h2>금향</h2>
+                    <p>부드러운 음악, 담백한 온기</p>
+                    <a href="https://chaesan477.github.io/GEUMHYANG-CAFE/index.html">
+                        <div class="box2">
+                            <p>사이트 들어가기</p>
+                       </div>
+                    </a>
+                </div>
+                <!-- 카페 3 -->
+                <div class="box1">
+                    <img src="플라워.JPG" alt="플라워1002 카페 이미지">
+                    <h2>플라워1002</h2>
+                    <p>향기로 채우는 아늑한 시간</p>
+                    <a href="https://chaesan477.github.io/FLOWER-CAFE/">
+                        <div class="box2">
+                            <p>사이트 들어가기</p>
+                       </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 푸터 영역 -->
+    <footer>
+        <p>eighteens</p>
+    </footer>
+
+    <!-- Leaflet JS 스크립트 -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+      // DOMContentLoaded 이벤트 리스너를 추가하여 문서가 완전히 로드된 후에 스크립트가 실행되도록 합니다.
+      document.addEventListener('DOMContentLoaded', function() {
+        // 지도 초기화 및 중심 좌표 설정
+        // 34.971980, 127.489488는 순천대학교 근처 좌표입니다.
+        const map = L.map('map').setView([34.971980, 127.489488], 14);
+
+        // OpenStreetMap 타일 레이어를 지도에 추가합니다.
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // 표시할 카페 목록과 좌표
+        const cafes = [
+            { name: "블루밍", coords: [34.971980, 127.489488] },
+            { name: "플라워1002", coords: [34.971166, 127.483555] },
+            { name: "금향", coords: [34.980373, 127.502718] }
+        ];
+
+        // 각 카페에 대해 마커와 팝업을 추가합니다.
+        cafes.forEach(cafe => {
+            const marker = L.marker(cafe.coords).addTo(map);
+            const popup = L.popup({
+                closeButton: false,
+                offset: L.point(0, -20)
+            }).setContent(cafe.name);
+
+            // 마우스 오버 시 팝업을 띄웁니다.
+            marker.on('mouseover', function(e) {
+                popup.setLatLng(e.latlng).openOn(map);
+            });
+
+            // 마우스 아웃 시 팝업을 닫습니다.
+            marker.on('mouseout', function() {
+                map.closePopup(popup);
+            });
+        });
+        
+        // 햄버거 메뉴 클릭 이벤트
+        const hamburger = document.querySelector('.hamburger');
+        const nav = document.querySelector('nav');
+
+        hamburger.addEventListener('click', () => {
+            nav.classList.toggle('active');
+        });
+      });
+    </script>
+</body>
+</html>
